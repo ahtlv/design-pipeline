@@ -22,7 +22,7 @@ PRD ─▶ ux-discovery ─▶ impeccable (design system → build → review) �
 Порядок важен.
 
 ### 1. superpowers (база процессов)
-Установи плагин `superpowers` через меню `/plugin` в Claude Code.
+Установи плагин `superpowers` через меню `/plugin` в Claude Code .
 
 ### 2. design-pipeline + ux-discovery
 ```bash

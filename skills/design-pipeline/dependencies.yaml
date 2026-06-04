@@ -1,0 +1,34 @@
+# Зависимости design-pipeline.
+# preflight читает этот файл, проверяет наличие и предлагает установку отсутствующих.
+# Все внешние зависимости ставятся официальными npx-установщиками из источника — НЕ вендорятся.
+
+skills:
+  - name: ux-discovery
+    required: true
+    phase: 0
+    check: "скилл ux-discovery доступен (Skill tool / ~/.claude/skills)"
+    install: "npx skills add github.com/ahtlv/design-pipeline --skill ux-discovery"
+    note: "свой скилл, едет в этом же репо (vendored)"
+
+  - name: emil-design-eng
+    required: false              # усилитель motion; без него Ф2 не падает
+    phase: 2
+    check: "скилл emil-design-eng доступен"
+    install: "npx skills add github.com/emilkowalski/skill --skill emil-design-eng"
+    note: "официальный скилл Эмиля Ковальски. НЕ вендорить — ставить из источника автора."
+
+tools:
+  - name: impeccable
+    required: true
+    phases: [1, 2, 3]
+    version: "^2.3.2"            # caret: патчи/миноры 2.x сами, мажор (3.0) — вручную после changelog
+    check: "команда /impeccable доступна (установлен как скилл)"
+    install: "npx impeccable@^2.3.2 skills install"
+    alt_install: "/plugin marketplace add pbakaus/impeccable → /plugin install"
+    commands_used: [extract, teach, document, craft, critique, audit, polish, live]
+    note: "ставится как скилл один раз; команды вызываются как /impeccable <command>"
+
+plugins:
+  - name: superpowers
+    required: false              # design-pipeline работает и без него
+    note: "родительский оркестратор процессов; design-pipeline встраивается на UI-этапе через правило в CLAUDE.md"

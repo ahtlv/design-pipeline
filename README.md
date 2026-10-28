@@ -48,9 +48,12 @@ npx skills add github.com/ahtlv/design-pipeline --skill design-pipeline ux-disco
 
 ### 3. Правило интеграции
 
-Pocock-скиллы `implement` и `code-review` зовут другие скиллы явно, по имени. Сами по себе
-они design-pipeline не позовут, поэтому нужно правило. Добавь его в `~/.claude/CLAUDE.md`
-и в `~/.codex/AGENTS.md` (или в оба файла проекта):
+Без правила скилл подхватывается только по описанию, а это ненадёжно. На тесте 2026-10-28
+(«сделай дизайн-ревью index.html», имя скилла не называлось) Codex взял design-pipeline сам,
+а Claude Code сработал 1 раз из 3 и один раз написал, что «использовал impeccable», не вызвав
+его. С правилом оба агента взяли скилл во всех прогонах. Pocock-скиллы `implement` и
+`code-review` тоже зовут другие скиллы только по имени. Поэтому правило **обязательно**:
+добавь его в `~/.claude/CLAUDE.md` и в `~/.codex/AGENTS.md` (или в оба файла проекта):
 
 ```markdown
 ## UI

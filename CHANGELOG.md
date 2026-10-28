@@ -3,7 +3,7 @@
 Все заметные изменения design-pipeline.
 Формат: [Keep a Changelog](https://keepachangelog.com), версии: [semver](https://semver.org).
 
-## [0.2.0] — unreleased
+## [0.2.0] — 2026-10-28
 ### Added
 - Поддержка **Codex**: `agents/openai.yaml` для обоих скиллов, таблица синтаксиса вызова
   (`/impeccable` и `$impeccable`), установка одной командой в оба харнеса, проверка папок

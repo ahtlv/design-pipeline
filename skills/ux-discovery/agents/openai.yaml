@@ -1,0 +1,5 @@
+interface:
+  display_name: "UX Discovery"
+  short_description: "Discovery interview: users, journey, pains, happy path"
+policy:
+  allow_implicit_invocation: true

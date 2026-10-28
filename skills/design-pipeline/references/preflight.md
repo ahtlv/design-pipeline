@@ -1,47 +1,63 @@
-# Preflight — проверка и установка зависимостей
+# Preflight: проверка и установка зависимостей
 
-Выполняется один раз перед первым запуском конвейера. Цель — убедиться, что всё на месте,
-и предложить установку отсутствующего, не падая молча.
+Один раз перед первым запуском конвейера в проекте. Цель: всё на месте, а отсутствующее
+предложено к установке, без молчаливого падения.
 
 ## Алгоритм
 
-1. Прочитай `dependencies.yaml`.
-2. Для каждой зависимости выполни `check`:
-   - **impeccable** — проверь, доступна ли команда `/impeccable` (установлен ли скилл).
-     Быстрая проверка: `ls ~/.claude/skills/impeccable 2>/dev/null` или наличие в списке скиллов.
-   - **ux-discovery** — проверь наличие скилла `ux-discovery`.
-   - **emil-design-eng** — проверь наличие скилла `emil-design-eng` (опционально).
-3. Для каждой отсутствующей зависимости:
-   - Покажи пользователю, чего не хватает и команду установки из `install`.
-   - **Спроси разрешение** перед установкой — не ставь молча.
-   - На `required: true` (impeccable, ux-discovery) — без них конвейер не поедет, настаивай.
-   - На `required: false` (emil) — предложи, но не блокируй: «без emil motion будет на уровне impeccable».
-4. После установки — перепроверь и продолжай конвейер.
+1. Определи харнес: Claude Code или Codex. От него зависят папки и синтаксис вызова.
+2. Прочитай `dependencies.yaml`.
+3. Найди каждую зависимость в папках скиллов своего харнеса:
+
+   ```bash
+   # Claude Code
+   ls -d ~/.claude/skills/{impeccable,ux-discovery,emil-design-eng} .claude/skills/impeccable 2>/dev/null
+   # Codex
+   ls -d ~/.codex/skills/{ux-discovery,emil-design-eng} ~/.agents/skills/impeccable .agents/skills/impeccable 2>/dev/null
+   ```
+
+   Pocock-скиллы: в Claude Code это плагин `mattpocock-skills` (`claude plugin list`), в Codex
+   скиллы `to-spec`, `to-tickets`, `implement` в `~/.codex/skills/`.
+4. Поколение impeccable: найди в папке скилла упоминание команды `init`
+   (`grep -rl "init" <папка impeccable>`). Нет `init`, а есть `teach`: это 2.x, конвейер на ней
+   не поедет, предложи `npx impeccable update`. (`npx impeccable --version` показывает версию
+   пакета в npx-кэше, а не установленного скилла.)
+5. Для каждой отсутствующей зависимости покажи, чего нет, и команду из `install`. Спроси
+   разрешение и ставь только после «да».
+   - `required: true` (impeccable, ux-discovery): без них конвейер стоит, так и скажи.
+   - `required: false` (emil, mattpocock-skills): предложи и продолжай без них.
+6. После установки перезапусти харнес, если скилл не появился, и перепроверь шаг 3.
+
+Готово, когда каждая required-зависимость найдена, а по каждой optional пользователь сказал
+«ставим» или «без неё».
 
 ## Команды установки
 
 ```bash
-# impeccable (required) — ставится как скилл, команды доступны как /impeccable <cmd>
-npx impeccable@^2.3.2 skills install
-# альтернатива: /plugin marketplace add pbakaus/impeccable → /plugin install
+# impeccable (required): один скилл, 24 команды, ставит в оба харнеса
+npx impeccable@^4.8.0 install -y --providers=claude,codex --scope=global
 
-# ux-discovery (required) — vendored в этом же репо
-npx skills add github.com/ahtlv/design-pipeline --skill ux-discovery
+# ux-discovery (required): из этого репо
+npx skills add github.com/ahtlv/design-pipeline --skill ux-discovery -g -a claude-code codex
 
-# emil-design-eng (optional) — официальный скилл Эмиля Ковальски
-npx skills add github.com/emilkowalski/skill --skill emil-design-eng
+# emil-design-eng (optional)
+npx skills add github.com/emilkowalski/skill --skill emil-design-eng -g -a claude-code codex
 ```
 
-## Почему именно так
+Только Codex: impeccable кладёт проектный хук в `.codex/hooks.json`. Открой `/hooks` и одобри
+его; после обновлений, меняющих хук, Codex попросит одобрить снова.
 
-- **Ничего не вендорится копией** (кроме своего ux-discovery) — внешние скиллы ставятся из источника:
-  легально, обновляемо, единая npx-модель.
-- **impeccable пинуется на `^2.3.2`** — фиксы 2.x прилетают сами, ломающий мажор (3.0) — только вручную
-  после чтения changelog. Обновление = правка одной строки в `dependencies.yaml`.
-- **emil опционален** — это усилитель motion, не блокер. Конвейер деградирует мягко.
+## Почему так
 
-## Граничные случаи preflight
+- **Внешнее не копируется в репо**, ставится из источника: легально и обновляемо.
+- **impeccable пинуется на `^4.8.0`**: миноры 4.x прилетают сами, мажор только руками после
+  changelog. Обновление пина: одна строка в `dependencies.yaml`.
+- **Один флаг на два харнеса** (`--providers=claude,codex`, `-a claude-code codex`): конвейер
+  одинаково работает в Claude Code и Codex, и пользователь не ставит всё дважды.
 
-- Нет интернета — установка через npx не пройдёт; сообщи пользователю, предложи поставить заранее.
-- impeccable уже стоит другой версии — не конфликтует (skills install обновит/оставит, версии в манифесте — ориентир).
-- Пользователь отказался ставить required-зависимость — останови конвейер с понятным сообщением, что без неё нельзя.
+## Граничные случаи
+
+- Нет интернета: npx не пройдёт; предложи поставить заранее.
+- Пользователь отказался от required: останови конвейер и назови, что именно без неё не поедет.
+- impeccable стоит только в одном харнесе: запусти установку с `--providers=` только для
+  недостающего (`claude` или `codex`).

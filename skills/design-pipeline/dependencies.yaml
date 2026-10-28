@@ -1,34 +1,39 @@
 # Зависимости design-pipeline.
 # preflight читает этот файл, проверяет наличие и предлагает установку отсутствующих.
-# Все внешние зависимости ставятся официальными npx-установщиками из источника — НЕ вендорятся.
+# Внешние зависимости ставятся официальными установщиками из источника, не вендорятся.
+#
+# Папки скиллов по харнесам (где искать при проверке):
+#   claude: ~/.claude/skills/, .claude/skills/, плагины в ~/.claude/plugins/cache/
+#   codex:  ~/.codex/skills/, ~/.agents/skills/, .agents/skills/
 
 skills:
   - name: ux-discovery
     required: true
-    phase: 0
-    check: "скилл ux-discovery доступен (Skill tool / ~/.claude/skills)"
-    install: "npx skills add github.com/ahtlv/design-pipeline --skill ux-discovery"
-    note: "свой скилл, едет в этом же репо (vendored)"
+    phases: [0]
+    install: "npx skills add github.com/ahtlv/design-pipeline --skill ux-discovery -g -a claude-code codex"
+    note: "свой скилл, едет в этом же репо"
 
   - name: emil-design-eng
-    required: false              # усилитель motion; без него Ф2 не падает
-    phase: 2
-    check: "скилл emil-design-eng доступен"
-    install: "npx skills add github.com/emilkowalski/skill --skill emil-design-eng"
-    note: "официальный скилл Эмиля Ковальски. НЕ вендорить — ставить из источника автора."
+    required: false              # усилитель motion; без него Ф3 берёт impeccable animate
+    phases: [3]
+    install: "npx skills add github.com/emilkowalski/skill --skill emil-design-eng -g -a claude-code codex"
+    note: "официальный скилл Эмиля Ковальски; у репо нет LICENSE, поэтому только установка из источника"
 
 tools:
   - name: impeccable
     required: true
-    phases: [1, 2, 3]
-    version: "^2.3.2"            # caret: патчи/миноры 2.x сами, мажор (3.0) — вручную после changelog
-    check: "команда /impeccable доступна (установлен как скилл)"
-    install: "npx impeccable@^2.3.2 skills install"
-    alt_install: "/plugin marketplace add pbakaus/impeccable → /plugin install"
-    commands_used: [extract, teach, document, craft, critique, audit, polish, live]
-    note: "ставится как скилл один раз; команды вызываются как /impeccable <command>"
+    phases: [0, 1, 2, 3, 4]
+    version: "^4.8.0"            # caret: миноры 4.x сами, мажор (5.0) вручную после changelog
+    install: "npx impeccable@^4.8.0 install -y --providers=claude,codex --scope=global"
+    update: "npx impeccable update"
+    commands_used: [init, shape, document, extract, craft, animate, critique, audit, polish, live]
+    cli_used: [detect]           # npx impeccable detect: детерминированный сканер, без харнеса
+    note: "codex: после установки одобрить проектный хук через /hooks"
 
 plugins:
-  - name: superpowers
-    required: false              # design-pipeline работает и без него
-    note: "родительский оркестратор процессов; design-pipeline встраивается на UI-этапе через правило в CLAUDE.md"
+  - name: mattpocock-skills
+    required: false              # конвейер Покока, в который врезаются фазы; без него фазы работают отдельно
+    skills_used: [grill-me, wayfinder, prototype, to-spec, to-tickets, implement, implement-spec, tdd, code-review]
+    install:
+      claude: "claude plugin install mattpocock-skills@claude-plugins-official"
+      codex: "codex plugin marketplace add mattpocock/skills && codex plugin add mattpocock-skills@mattpocock"

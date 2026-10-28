@@ -1,0 +1,5 @@
+interface:
+  display_name: "Design Pipeline"
+  short_description: "UX → design system → build → design review for UI work"
+policy:
+  allow_implicit_invocation: true
